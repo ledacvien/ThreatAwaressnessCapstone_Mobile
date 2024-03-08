@@ -13,7 +13,7 @@
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="70dp">
+        android:layout_marginTop="50dp">
 
         <ImageView
             android:id="@+id/imageView"
@@ -41,6 +41,12 @@
         android:layout_height="380dp"
         android:layout_marginTop="20dp"
         android:src="@drawable/intersection" />
+
+    <Button
+        android:id="@+id/btnActivate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ACTIVATE"/>
 
     <Button
         android:id="@+id/btnSafe"
