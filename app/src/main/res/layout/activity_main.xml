@@ -13,7 +13,7 @@
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp">
+        android:layout_marginTop="10dp">
 
         <ImageView
             android:id="@+id/imageView"
@@ -38,7 +38,7 @@
     <ImageView
         android:id="@+id/imageIntersection"
         android:layout_width="match_parent"
-        android:layout_height="380dp"
+        android:layout_height="250dp"
         android:layout_marginTop="20dp"
         android:src="@drawable/intersection" />
 

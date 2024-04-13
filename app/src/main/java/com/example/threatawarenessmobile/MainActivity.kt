@@ -1,10 +1,11 @@
 package com.example.threatawarenessmobile
 
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
@@ -12,22 +13,16 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.Volley
-import com.bumptech.glide.Glide
-import org.json.JSONException
 import retrofit2.Call
 import retrofit2.Callback
-import java.io.ByteArrayInputStream
 
 class MainActivity : AppCompatActivity() {
+
+    private val handler = Handler(Looper.getMainLooper())
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        vibratePhone()
         val btnSafe : Button = findViewById(R.id.btnSafe)
         btnSafe.setOnClickListener {
             clickSafeButton()
@@ -35,6 +30,7 @@ class MainActivity : AppCompatActivity() {
 
         val btnActivate : Button = findViewById(R.id.btnActivate)
         btnActivate.setOnClickListener {
+            Toast.makeText(this, "Start checking traffic", Toast.LENGTH_SHORT).show()
             clickActivateButton()
         }
     }
@@ -44,10 +40,18 @@ class MainActivity : AppCompatActivity() {
         val textView : TextView = findViewById(R.id.textView)
         circle.setImageResource(R.drawable.green_circle)
         textView.text = "SAFE"
-        vibratePhone()
+        vibratePhone(200)
     }
 
     private fun clickActivateButton(){
+        handler.post(object : Runnable{
+            override fun run() {
+                handler.postDelayed(this, fetchDataFromAPI())
+            }
+        })
+    }
+    private fun fetchDataFromAPI(): Long {
+        var delayTime : Long = 20
         dataService.getWarning().enqueue(object : Callback<WarningResponse> {
             override fun onResponse(
                 call: Call<WarningResponse>,
@@ -58,34 +62,43 @@ class MainActivity : AppCompatActivity() {
                     // update UI
                     val textView : TextView = findViewById(R.id.textView)
                     val circle : ImageView = findViewById(R.id.imageView)
-                    val imageView: ImageView = findViewById(R.id.imageIntersection)
+                    //val imageView: ImageView = findViewById(R.id.imageIntersection)
 
-                    circle.setImageResource(R.drawable.green_circle)
-                    textView.text = dataResponse?.text_data
-                    Glide.with(this@MainActivity)
-                        .load("https://threatawareness.pythonanywhere.com/image").into(imageView)
-
-                    //Log.d("Image url: ",  "${dataResponse?.image_path}")
-                    //Log.d("Text: ","${dataResponse.toString()}")
+                    val message = dataResponse?.safe_to_cross
+                    Log.d("MSG", message.toString())
+                    if (message == true) {
+                        circle.setImageResource(R.drawable.green_circle)
+                        textView.textSize = 20f
+                        textView.text = "PROCEED WITH CAUTION"
+                    }
+                    else {
+                        circle.setImageResource(R.drawable.red_circle)
+                        textView.text = "DANGER!!"
+                        vibratePhone(500)
+                        // change delay time. New API will be made after 1 second
+                        delayTime = 2000
+                    }
                 } else {
                     // Handle error
                 }
             }
 
             override fun onFailure(call: Call<WarningResponse>, t: Throwable) {
-                TODO("Not yet implemented")
+                Toast.makeText(this@MainActivity,"API not working", Toast.LENGTH_SHORT).show()
             }
         })
+
+        return delayTime
     }
 
-    private fun vibratePhone() {
+    private fun vibratePhone(time: Long) {
         val vibrator = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         // Vibrate for 500 milliseconds
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+            vibrator.vibrate(VibrationEffect.createOneShot(time, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
             // Deprecated in API 26
-            vibrator.vibrate(500)
+            vibrator.vibrate(time)
         }
     }
 }
